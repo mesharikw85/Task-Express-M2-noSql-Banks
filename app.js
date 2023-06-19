@@ -14,5 +14,3 @@ app.use("/accounts", accountsRoutes);
 app.listen(process.env.PORT, () => {
   console.log("The application is running on localhost:8000");
 });
-
-//hSIrClXSCco5cziz

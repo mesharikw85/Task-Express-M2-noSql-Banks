@@ -20,16 +20,14 @@ exports.accountCreate = async (req, res) => {
 };
 
 exports.accountDelete = async (req, res) => {
+  const accountId = req.params;
   try {
-    const accountId = req.params;
     const foundAccount = await Account.findById(accountId);
-
-    if (foundAccount) {
-      Account.findOneAndDelete({ _id: accountId });
-      return res.status(204).end();
-    } else {
-      return res.status(404).json({ message: "This account doesn't exist" });
+    if (!foundAccount) {
+      return res.status(404).json({ message: "account not found" });
     }
+    await foundAccount.deleteOne();
+    return res.status(204).end();
   } catch (error) {
     return res
       .status(500)
@@ -47,33 +45,19 @@ exports.accountDelete = async (req, res) => {
 };
 
 exports.accountUpdate = async (req, res) => {
+  const accountId = req.params;
   try {
-    const { accountId } = req.params;
     const foundAccount = await Account.findById(accountId);
-    if (foundAccount) {
-      Account.findByIdAndUpdate(accountId, req.body, {
-        new: true,
-        runValidators: true,
-      });
-      return res.status(204).json(foundAccount);
-    } else {
-      return res.status(404).json({ msg: "not found" });
+    if (!foundAccount) {
+      return res.status(404).json({ message: "account not found" });
     }
+    await foundAccount.updateOne(req.body);
+    return res.status(204).end();
   } catch (error) {
     return res
       .status(500)
-      .json({ message: "Internal server error", error: message });
+      .json({ message: "Internal server error", error: error.message });
   }
-
-  // try {
-  //   const { accountId } = req.params;
-  //   const foundAccount = await Account.findById(accountId);
-  //   if (foundAccount) Account.findByIdAndUpdate
-  //   return res.status(404).json({ msg: "not found" });
-  //   return res.status(200).json(foundAccount);
-  // } catch (error) {
-  //   return res.status(500).json({ message: "somthing wrong", error: message });
-  // }
 
   // const { accountId } = req.params;
   // const foundAccount = accounts.find((account) => account.id === +accountId);
@@ -85,8 +69,15 @@ exports.accountUpdate = async (req, res) => {
   // }
 };
 
-exports.accountsGet = (req, res) => {
-  res.json(accounts);
+exports.accountsGet = async (req, res) => {
+  try {
+    const accounts = await Account.find().select("-createdAt -updatedAt");
+    return res.status(200).json(accounts);
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "somthing wrong", error: error.message });
+  }
 };
 
 exports.getAccountByUsername = (req, res) => {
